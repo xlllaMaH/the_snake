@@ -195,18 +195,68 @@ def handle_keys(game_object, current_speed, min_speed, max_speed):
     return new_speed, speed_change
 
 
+def _create_apples(snake_position, count=3):
+    """Создание списка яблок, избегая позиции змейки"""
+    apples = []
+    for _ in range(3):
+        new_apple = Apple()
+        occupied = snake_position + [a.position for a in apples]
+        new_apple.randomize_position(occupied)
+        apples.append(new_apple)
+    return apples
+
+
+def _check_apple_colission(snake, apples):
+    """Проверка съели ли яблоко. Возврат обновленного списка"""
+    head = snake.get_head_position()
+    for apple in apples:
+        if head == apple.position:
+            snake.length += 1
+            occupied = snake.positions + [
+                a.position for a in apples if a != apple
+            ]
+            apple.randomize_position(occupied)
+            break
+    return apples
+
+
+def _check_game_over(snake, record_length, current_speed):
+    """Проверка змейки на самоукус"""
+    if (
+            snake.length > 3
+            and snake.get_head_position() in snake.positions[1:]
+    ):
+
+        new_record = max(record_length, snake.length)
+        caption = (
+            f'Змейка | Скорость: {current_speed} | Рекорд: {record_length}'
+        )
+        return True, new_record, caption
+    return False, record_length, None
+
+
+def _reset(snake, apples_count):
+    """Ресет игры"""
+    screen.fill(BOARD_BACKGROUND_COLOR)
+    snake.reset()
+    return _create_apples(snake.positions, apples_count)
+
+
+def _draw_game(apples, snake):
+    """Отрисовка всех объектов"""
+    for apple in apples:
+        apple.draw()
+    snake.draw()
+    pygame.display.update()
+
+
 def main():
     """Основной игровой цикл"""
     # Инициализация PyGame:
     pygame.init()
     # Тут нужно создать экземпляры классов.
     snake = Snake()
-    apples = []
-    for _ in range(3):
-        new_apple = Apple()
-        occupied = snake.positions + [a.position for a in apples]
-        new_apple.randomize_position(occupied)
-        apples.append(new_apple)
+    apples = _create_apples(snake.positions, 3)
 
     record_length = 1
     current_speed = SPEED
@@ -214,12 +264,7 @@ def main():
         f'Змейка | Скорость: {current_speed} | Рекорд: {record_length}'
     )
 
-    for apple in apples:
-        apple.draw()
-
-    for pos in snake.positions:
-        snake.draw_cell(pos, snake.body_color)
-    pygame.display.update()
+    _draw_game(apples, snake)
 
     while True:
         current_speed, speed_change = handle_keys(
@@ -238,45 +283,19 @@ def main():
 
         snake.update_direction()
         snake.move()
-        for apple in apples:
-            if snake.get_head_position() == apple.position:
-                snake.length += 1
-                occupied = snake.positions + [
-                    a.position for a in apples if a != apple
-                ]
-                apple.randomize_position(occupied)
-                break
+        apples = _check_apple_colission(snake, apples)
 
-        if (
-            snake.length > 3
-            and snake.get_head_position() in snake.positions[1:]
-        ):
-            if snake.length > record_length:
-                record_length = snake.length
-                pygame.display.set_caption
-                (
-                    'Змейка | Скорость: '
-                    f'{current_speed} | Рекорд: {record_length}'
-                )
-            screen.fill(BOARD_BACKGROUND_COLOR)
-            snake.reset()
-            apples.clear()
+        is_over, record_length, new_caption = _check_game_over(
+            snake, record_length, current_speed
+        )
 
-            for _ in range(3):
-                new_apple = Apple()
-                occupied = snake.positions + [a.position for a in apples]
-                new_apple.randomize_position(occupied)
-                apples.append(new_apple)
-            for apple in apples:
-                apple.draw()
-            snake.draw()
-            pygame.display.update()
+        if is_over:
+            pygame.display.set_caption(new_caption)
+            apples = _reset(snake, 3)
+            _draw_game(apples, snake)
             continue
 
-        for apple in apples:
-            apple.draw()
-        snake.draw()
-        pygame.display.update()
+        _draw_game(apples, snake)
 
 
 if __name__ == '__main__':
