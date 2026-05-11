@@ -46,8 +46,8 @@ clock = pygame.time.Clock()
 class GameObject:
     """Базовый класс для всех объектов"""
 
-    """Инициализация позиции и цвета объекта"""
     def __init__(self, position=None, body_color=APPLE_COLOR):
+        """Инициализация позиции и цвета объекта"""
         self.position = position
         self.body_color = body_color
 
@@ -66,8 +66,8 @@ class GameObject:
 class Apple(GameObject):
     """Класс яблока"""
 
-    """Создания яблока определенного цвета в случайной позиции"""
     def __init__(self, position=None, body_color=APPLE_COLOR):
+        """Создания яблока определенного цвета в случайной позиции"""
         if position is None:
             position = self._get_random_position()
         super().__init__(position, body_color)
@@ -94,8 +94,8 @@ class Apple(GameObject):
 class Snake(GameObject):
     """Класс змейки"""
 
-    """Инициализация змейки в ценрте поля с заданным цветом"""
     def __init__(self, position=None, body_color=SNAKE_COLOR):
+        """Инициализация змейки в ценрте поля с заданным цветом"""
         if position is None:
             position = START_POSITION
         super().__init__(position, body_color)
@@ -151,6 +151,27 @@ class Snake(GameObject):
         self.last = None
 
 
+def _hendle_speed_control(event, current_speed, min_speed, max_speed):
+    """Обработка скорости с помоцью клавиш"""
+    if event.key == pygame.K_q and current_speed > min_speed:
+        return current_speed - 1, True
+    elif event.key == pygame.K_w and current_speed < max_speed:
+        return current_speed + 1, True
+    return current_speed, False
+
+
+def _hendle_direction_control(event, game_object):
+    """Обработка направления клавишами"""
+    if event.key == pygame.K_UP and game_object.direction != DOWN:
+        game_object.next_direction = UP
+    elif event.key == pygame.K_DOWN and game_object.direction != UP:
+        game_object.next_direction = DOWN
+    elif event.key == pygame.K_LEFT and game_object.direction != RIGHT:
+        game_object.next_direction = LEFT
+    elif event.key == pygame.K_RIGHT and game_object.direction != LEFT:
+        game_object.next_direction = RIGHT
+
+
 def handle_keys(game_object, current_speed, min_speed, max_speed):
     """Обработка нажатия клавиш для управления"""
     new_speed = current_speed
@@ -164,21 +185,12 @@ def handle_keys(game_object, current_speed, min_speed, max_speed):
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 raise SystemExit
-            if event.key == pygame.K_q and current_speed > min_speed:
-                new_speed -= 1
-                speed_change = True
-            elif event.key == pygame.K_w and current_speed < max_speed:
-                new_speed += 1
-                speed_change = True
 
-            if event.key == pygame.K_UP and game_object.direction != DOWN:
-                game_object.next_direction = UP
-            elif event.key == pygame.K_DOWN and game_object.direction != UP:
-                game_object.next_direction = DOWN
-            elif event.key == pygame.K_LEFT and game_object.direction != RIGHT:
-                game_object.next_direction = LEFT
-            elif event.key == pygame.K_RIGHT and game_object.direction != LEFT:
-                game_object.next_direction = RIGHT
+            new_speed, speed_change = _hendle_speed_control(
+                event, new_speed, min_speed, max_speed
+            )
+
+            _hendle_direction_control(event, game_object)
 
     return new_speed, speed_change
 
