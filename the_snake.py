@@ -46,7 +46,7 @@ clock = pygame.time.Clock()
 class GameObject:
     """Базовый класс для всех объектов"""
 
-    def __init__(self, position=None, body_color=APPLE_COLOR):
+    def __init__(self, position=None, body_color=None):
         """Инициализация позиции и цвета объекта"""
         self.position = position
         self.body_color = body_color
@@ -277,6 +277,7 @@ def main():
             pygame.display.set_caption(
                 f'Змейка | Скорость: {current_speed} | Рекорд: {record_length}'
             )
+
         clock.tick(current_speed)
 
         # Тут опишите основную логику игры.
@@ -293,6 +294,9 @@ def main():
             pygame.display.set_caption(new_caption)
             apples = _reset(snake, 3)
             _draw_game(apples, snake)
+            pygame.display.set_caption(
+                f'Змейка | Скорость: {current_speed} | Рекорд: {record_length}'
+            )
             continue
 
         _draw_game(apples, snake)
